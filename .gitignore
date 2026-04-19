@@ -23,7 +23,7 @@ google-services.json
 GoogleService-Info.plist
 
 # ─── EAS secrets (contains project credentials, never commit) ─────────────
-eas.json
+credentials.json
 
 # ─── Environment variables ────────────────────────────────────────────────
 .env
