@@ -1,5 +1,6 @@
 <div align="center">
-  <h1>💪 RepBook</h1>
+  <img src="assets/images/icon.png" width="120" height="120" alt="RepBook Logo" />
+  <h1>RepBook</h1>
   <p><strong>A no-nonsense, simple open-source workout tracker.</strong></p>
 
   <p>
@@ -28,20 +29,23 @@
 
 ## 🚀 Features
 
+- **Guided Focus Mode:** A step-by-step workout player that guides you through weight, sets, reps, and rest.
+- **Smart Targets:** Automatically surfaces your previous session data (weight/reps) while you log.
 - **Ad-Hoc & Template Workouts:** Start a random workout on the fly, or build reusable templates.
-- **Smart Scheduling:** Assign templates to specific days of the week or calendar dates. The app automatically surfaces what you need to do today.
+- **Smart Scheduling:** Assign templates to specific days of the week or calendar dates.
 - **Dynamic Template Creation:** Finished an ad-hoc workout? Save it as a new template with a single tap.
-- **Progress Analytics:** Visualise your volume and strength over time with interactive bar and line charts.
-- **Full History:** Scroll through your entire workout history with detailed exercise and set breakdowns.
-- **Dark Mode:** A sleek, high-contrast dark theme powered by <a href="https://tamagui.dev" target="_blank" rel="noopener noreferrer">Tamagui</a>.
+- **Premium Haptics:** Physical feedback for every interaction, powered by Expo Haptics.
+- **Progress Analytics:** Visualise your volume and strength over time with interactive charts.
+- **Dark Mode:** A sleek, high-contrast dark theme powered by [Tamagui](https://tamagui.dev).
 
 ## 🗺️ Roadmap (Upcoming Features)
 
-- Custom App Logo & Branding
-- Data Export & Import (JSON/CSV backups for your SQLite data)
-- Rest Timer for active workouts
-- Support for Supersets & Dropsets
-- Muscle Group Heatmaps
+- [x] Custom App Logo & Branding
+- [x] Rest Timer for active workouts
+- [ ] Data Export & Import (JSON/CSV backups)
+- [ ] Support for Supersets & Dropsets
+- [ ] Muscle Group Heatmaps
+- [ ] Persistence for mid-workout session state
 
 ## 🛠️ Tech Stack
 
