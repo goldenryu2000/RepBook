@@ -113,6 +113,10 @@ export default function TemplatesScreen() {
   };
 
   const handleStart = (template: FullTemplate) => {
+    if (!template.exercises || template.exercises.length === 0) {
+      useAlertStore.getState().showAlert('Empty Template', 'This template has no exercises.');
+      return;
+    }
     useAlertStore
       .getState()
       .showAlert(`Start "${template.name}"?`, 'This replaces your current workout.', [
@@ -123,16 +127,22 @@ export default function TemplatesScreen() {
           onPress: () => {
             const uid = () => Math.random().toString(36).substring(2, 9);
             useWorkoutStore.setState({
+              isActive: true,
+              activeTemplateId: template.id,
               exercises: template.exercises.map(ex => ({
                 id: uid(),
                 name: ex.name,
-                sets: Array.from({ length: Math.max(ex.target_sets, 1) }, () => ({
+                sets: Array.from({ length: Math.max(Number(ex.target_sets || 1), 1) }, () => ({
                   id: uid(),
                   reps: '',
                   weight: '',
                   unit: defaultUnit,
                 })),
               })),
+              date: new Date(),
+              editingWorkoutId: null,
+              loggingMode: 'focus',
+              focusState: { exerciseIndex: 0, setIndex: 0, step: 'weight' },
             });
             router.navigate('/(tabs)');
           },

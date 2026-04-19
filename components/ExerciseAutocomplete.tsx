@@ -37,9 +37,18 @@ export function ExerciseAutocomplete({
         ).slice(0, 8);
 
   return (
-    <YStack flex={1}>
+    <YStack>
       <TextInput
-        style={[{ color: '#fafafa', fontSize: 18, fontWeight: '800' }, style]}
+        style={[
+          {
+            color: '#fafafa',
+            fontSize: 18,
+            fontWeight: '800',
+            paddingVertical: 8,
+          },
+          style,
+        ]}
+        textAlignVertical="top"
         placeholder={placeholder || 'Exercise Name'}
         placeholderTextColor="#52525b"
         value={value}
@@ -50,6 +59,9 @@ export function ExerciseAutocomplete({
           setTimeout(() => setFocused(false), 150);
         }}
         autoFocus={autoFocus}
+        multiline={true}
+        blurOnSubmit={true}
+        onSubmitEditing={() => Keyboard.dismiss()}
       />
       {focused && filtered.length > 0 && (
         <ScrollView

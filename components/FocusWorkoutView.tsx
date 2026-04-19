@@ -1,25 +1,33 @@
-import React, { useState, useEffect, useRef } from 'react';
-import {
-  YStack,
-  XStack,
-  Text,
-  Button,
-  H2,
-  Progress,
-  AnimatePresence,
-  Input,
-  ScrollView,
-} from 'tamagui';
-import { Platform, KeyboardAvoidingView, Keyboard } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useWorkoutStore } from '../store/workoutStore';
-import { useUserStore } from '../store/userStore';
+import React, { useEffect, useState } from 'react';
+import { Keyboard, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  AnimatePresence,
+  Button,
+  Input,
+  Progress,
+  ScrollView,
+  Text,
+  XStack,
+  YStack,
+} from 'tamagui';
 import { getLastPerformance } from '../db/database';
+import { useUserStore } from '../store/userStore';
+import { useWorkoutStore } from '../store/workoutStore';
+import { ExerciseAutocomplete } from './ExerciseAutocomplete';
 
-export function FocusWorkoutView() {
-  const { exercises, focusState, nextStep, prevStep, updateSet, setLoggingMode } =
-    useWorkoutStore();
+export function FocusWorkoutView({ onFinish }: { onFinish?: () => void }) {
+  const {
+    exercises,
+    focusState,
+    nextStep,
+    prevStep,
+    updateSet,
+    setLoggingMode,
+    updateExerciseName,
+    addExercise,
+  } = useWorkoutStore();
   const { defaultRestTime } = useUserStore();
   const [lastPerf, setLastPerf] = useState<any>(null);
 
@@ -54,12 +62,34 @@ export function FocusWorkoutView() {
     );
   }
 
-  const currentSet = currentExercise.sets[setIndex];
+  const currentSet = currentExercise.sets?.[setIndex];
+
+  // If we somehow have an exercise with no sets, or index is wrong
+  if (!currentSet && step !== 'complete') {
+    return (
+      <YStack f={1} jc="center" ai="center" p="$5">
+        <Text color="$color10">No sets found for this exercise.</Text>
+        <Button
+          mt="$4"
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            useWorkoutStore.getState().addSet(currentExercise.id);
+          }}
+        >
+          Add First Set
+        </Button>
+      </YStack>
+    );
+  }
+
   // Calculate granular progress based on sets and exercises, 100% if complete
   const progress =
     step === 'complete'
       ? 100
-      : ((exerciseIndex + setIndex / currentExercise.sets.length) / exercises.length) * 100;
+      : ((exerciseIndex +
+          (currentExercise.sets?.length > 0 ? setIndex / currentExercise.sets.length : 0)) /
+          exercises.length) *
+        100;
 
   return (
     <KeyboardAvoidingView
@@ -79,19 +109,48 @@ export function FocusWorkoutView() {
             >
               Exercise {exerciseIndex + 1} of {exercises.length}
             </Text>
-            <Button
-              size="$2"
-              chromeless
-              icon={<Feather name="list" size={16} color="#71717a" />}
-              onPress={() => setLoggingMode('list')}
-            >
-              List View
-            </Button>
+            <XStack gap="$2">
+              <Button
+                size="$2"
+                bg="$blue9"
+                br="$10"
+                icon={<Feather name="plus" size={14} color="black" />}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  addExercise();
+                }}
+              >
+                <Text color="black" fontWeight="700" fontSize="$2">
+                  EXERCISE
+                </Text>
+              </Button>
+              <Button
+                size="$2"
+                bg="$color3"
+                br="$10"
+                borderColor="$color5"
+                borderWidth={1}
+                icon={<Feather name="list" size={14} color="white" />}
+                onPress={() => setLoggingMode('list')}
+              >
+                <Text color="white" fontWeight="700" fontSize="$2">
+                  LIST
+                </Text>
+              </Button>
+            </XStack>
           </XStack>
-          <H2 color="$color12" fontSize="$8" fontWeight="900" numberOfLines={1}>
-            {currentExercise.name || 'Untitled Exercise'}
-          </H2>
-          <XStack ai="center" gap="$3">
+          <XStack ai="flex-start" gap="$2">
+            <ExerciseAutocomplete
+              value={currentExercise.name}
+              onChangeText={name => updateExerciseName(currentExercise.id, name)}
+              placeholder="Exercise Name"
+              style={{ fontSize: 28, fontWeight: '900', color: 'white' }}
+            />
+            <YStack pt="$3">
+              <Feather name="edit-2" size={18} color="#71717a" />
+            </YStack>
+          </XStack>
+          <XStack ai="center" gap="$3" mt="$2">
             <Progress value={progress} f={1} h={6} bg="$color3">
               <Progress.Indicator bg="$blue9" animation="lazy" />
             </Progress>
@@ -134,7 +193,7 @@ export function FocusWorkoutView() {
               {step === 'rest' && (
                 <RestStage key="rest" duration={defaultRestTime} onNext={nextStep} />
               )}
-              {step === 'complete' && <CompleteStage key="complete" />}
+              {step === 'complete' && <CompleteStage key="complete" onFinish={onFinish} />}
             </AnimatePresence>
           </YStack>
         </ScrollView>
@@ -182,7 +241,16 @@ export function FocusWorkoutView() {
 
 // Internal Stage Components
 
-function WeightStage({ exerciseId, setId, weight, unit, onNext, lastPerf }: any) {
+interface WeightStageProps {
+  exerciseId: string;
+  setId: string;
+  weight: string;
+  unit: string;
+  onNext: () => void;
+  lastPerf: any;
+}
+
+function WeightStage({ exerciseId, setId, weight, unit, onNext, lastPerf }: WeightStageProps) {
   const { updateSet } = useWorkoutStore();
 
   return (
@@ -272,7 +340,7 @@ function WeightStage({ exerciseId, setId, weight, unit, onNext, lastPerf }: any)
   );
 }
 
-function ActiveStage({ onNext }: any) {
+function ActiveStage({ onNext }: { onNext: () => void }) {
   const [seconds, setSeconds] = useState(0);
 
   useEffect(() => {
@@ -340,7 +408,15 @@ function ActiveStage({ onNext }: any) {
   );
 }
 
-function RepsStage({ exerciseId, setId, reps, onNext, lastPerf }: any) {
+interface RepsStageProps {
+  exerciseId: string;
+  setId: string;
+  reps: string;
+  onNext: () => void;
+  lastPerf: any;
+}
+
+function RepsStage({ exerciseId, setId, reps, onNext, lastPerf }: RepsStageProps) {
   const { updateSet } = useWorkoutStore();
 
   return (
@@ -412,8 +488,18 @@ function RepsStage({ exerciseId, setId, reps, onNext, lastPerf }: any) {
   );
 }
 
-function RestStage({ duration, onNext }: any) {
+function RestStage({ duration, onNext }: { duration: number; onNext: () => void }) {
+  const { exercises, addExercise } = useWorkoutStore();
   const [remaining, setRemaining] = useState(duration);
+
+  const handleAddMore = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const newIndex = exercises.length;
+    addExercise();
+    useWorkoutStore.setState({
+      focusState: { exerciseIndex: newIndex, setIndex: 0, step: 'weight' },
+    });
+  };
 
   useEffect(() => {
     if (remaining <= 0) {
@@ -479,31 +565,40 @@ function RestStage({ duration, onNext }: any) {
           Skip Rest
         </Button>
       </XStack>
+
+      <Button
+        mt="$4"
+        size="$4"
+        chromeless
+        color="$blue10"
+        fontWeight="700"
+        icon={<Feather name="plus" size={16} color="$blue10" />}
+        onPress={handleAddMore}
+      >
+        ADD ANOTHER EXERCISE
+      </Button>
     </YStack>
   );
 }
 
-function CompleteStage() {
-  const { resetWorkout, exercises, date, editingWorkoutId } = useWorkoutStore();
+function CompleteStage({ onFinish }: { onFinish?: () => void }) {
+  const { exercises, addExercise } = useWorkoutStore();
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleFinalFinish = async () => {
-    if (isSaving) return;
-    setIsSaving(true);
+  const handleAddMore = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const newIndex = exercises.length;
+    addExercise();
+    // Jump to the new exercise immediately
+    useWorkoutStore.setState({
+      focusState: { exerciseIndex: newIndex, setIndex: 0, step: 'weight' },
+    });
+  };
 
-    try {
-      const { saveWorkoutSession } = require('../db/database');
-      const { useAlertStore } = require('../store/alertStore');
-
-      const valid = exercises.filter(ex => ex.name.trim() && ex.sets.some(s => s.reps || s.weight));
-      await saveWorkoutSession(valid, date.toISOString(), editingWorkoutId);
-
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      resetWorkout();
-      useAlertStore.getState().showAlert('Workout Saved! 💪', 'Great session today.');
-    } catch (e) {
-      console.error(e);
-    } finally {
+  const handlePress = async () => {
+    if (onFinish) {
+      setIsSaving(true);
+      await onFinish();
       setIsSaving(false);
     }
   };
@@ -526,17 +621,32 @@ function CompleteStage() {
         </Text>
       </YStack>
 
-      <Button
-        size="$6"
-        w="100%"
-        bg="$green9"
-        color="black"
-        fontWeight="800"
-        onPress={handleFinalFinish}
-        disabled={isSaving}
-      >
-        {isSaving ? 'SAVING...' : 'FINISH WORKOUT'}
-      </Button>
+      <YStack w="100%" gap="$3">
+        <Button
+          size="$6"
+          bg="$green9"
+          color="black"
+          fontWeight="800"
+          onPress={handlePress}
+          disabled={isSaving}
+        >
+          {isSaving ? 'SAVING...' : 'FINISH WORKOUT'}
+        </Button>
+
+        <Button
+          size="$5"
+          bg="$color3"
+          borderColor="$color5"
+          borderWidth={1}
+          color="white"
+          fontWeight="700"
+          onPress={handleAddMore}
+          icon={<Feather name="plus" size={18} color="white" />}
+          disabled={isSaving}
+        >
+          ADD ANOTHER EXERCISE
+        </Button>
+      </YStack>
     </YStack>
   );
 }

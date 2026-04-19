@@ -137,15 +137,21 @@ export default function LogScreen() {
   };
 
   const handleStartTemplate = (template: FullTemplate) => {
+    if (!template.exercises || template.exercises.length === 0) {
+      useAlertStore.getState().showAlert('Empty Template', 'This template has no exercises.');
+      return;
+    }
+
     const uid = () => Math.random().toString(36).substring(2, 9);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
     useWorkoutStore.setState({
       isActive: true,
       activeTemplateId: template.id,
       exercises: template.exercises.map(ex => ({
         id: uid(),
         name: ex.name,
-        sets: Array.from({ length: Math.max(ex.target_sets, 1) }, () => ({
+        sets: Array.from({ length: Math.max(Number(ex.target_sets || 1), 1) }, () => ({
           id: uid(),
           reps: '',
           weight: '',
@@ -335,7 +341,7 @@ export default function LogScreen() {
           </YStack>
         </ScrollView>
       ) : loggingMode === 'focus' ? (
-        <FocusWorkoutView />
+        <FocusWorkoutView onFinish={handleFinish} />
       ) : (
         <ScrollView
           style={{ flex: 1 }}
