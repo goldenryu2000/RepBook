@@ -3,10 +3,10 @@
   <p><strong>A no-nonsense, simple open-source workout tracker.</strong></p>
 
   <p>
-    <a href="https://github.com/expo/expo"><img src="https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white" alt="Expo" /></a>
-    <a href="https://reactnative.dev/"><img src="https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React Native" /></a>
-    <a href="https://tamagui.dev/"><img src="https://img.shields.io/badge/Tamagui-151515?style=for-the-badge&logo=react&logoColor=FFD166" alt="Tamagui" /></a>
-    <a href="https://www.sqlite.org/"><img src="https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite" /></a>
+    <a href="https://github.com/expo/expo" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white" alt="Expo" /></a>
+    <a href="https://reactnative.dev/" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React Native" /></a>
+    <a href="https://tamagui.dev/" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/Tamagui-151515?style=for-the-badge&logo=react&logoColor=FFD166" alt="Tamagui" /></a>
+    <a href="https://www.sqlite.org/" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite" /></a>
   </p>
 </div>
 
@@ -28,15 +28,15 @@
 - **Dynamic Template Creation:** Finished an ad-hoc workout? Save it as a new template with a single tap.
 - **Progress Analytics:** Visualise your volume and strength over time with interactive bar and line charts.
 - **Full History:** Scroll through your entire workout history with detailed exercise and set breakdowns.
-- **Dark Mode:** A sleek, high-contrast dark theme powered by [Tamagui](https://tamagui.dev).
+- **Dark Mode:** A sleek, high-contrast dark theme powered by <a href="https://tamagui.dev" target="_blank" rel="noopener noreferrer">Tamagui</a>.
 
 ## 🛠️ Tech Stack
 
 RepBook is built on the modern React Native ecosystem:
 
-- **Framework:** [Expo](https://expo.dev) (SDK 54) & Expo Router
-- **UI & Styling:** [Tamagui](https://tamagui.dev)
-- **State Management:** [Zustand](https://zustand-demo.pmnd.rs/)
+- **Framework:** <a href="https://expo.dev" target="_blank" rel="noopener noreferrer">Expo</a> (SDK 54) & Expo Router
+- **UI & Styling:** <a href="https://tamagui.dev" target="_blank" rel="noopener noreferrer">Tamagui</a>
+- **State Management:** <a href="https://zustand-demo.pmnd.rs/" target="_blank" rel="noopener noreferrer">Zustand</a>
 - **Database:** `expo-sqlite` (Synchronous SQLite running in WAL mode)
 - **Testing:** Jest + `jest-expo`
 - **Code Quality:** ESLint, Prettier, Husky, lint-staged
@@ -81,3 +81,9 @@ The entire app is powered by a robust, local SQLite database (`repbook.db`). We 
 ## 📄 License
 
 Distributed under the MIT License. See `LICENSE` for more information.
+
+---
+
+<p align="center">
+  <i>Made with the help of Antigravity 🚀</i>
+</p>
