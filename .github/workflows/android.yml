@@ -20,7 +20,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: "npm"
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
@@ -29,8 +29,8 @@ jobs:
         run: npm install -g eas-cli
 
       - name: Trigger EAS Build & Wait
-        run: eas build -p android --profile preview --non-interactive --wait --json >
-          build.json
+        run: |
+          eas build -p android --profile preview --non-interactive --wait --json > build.json
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
@@ -41,20 +41,21 @@ jobs:
         run: |
           APK_URL=$(jq -r '.[0].artifacts.buildUrl' build.json)
           if [ -z "$APK_URL" ] || [ "$APK_URL" = "null" ]; then
-            echo "Failed to extract APK URL. build.json output:"
+            echo "❌ Failed to extract APK URL. Full build.json:"
             cat build.json
             exit 1
           fi
           echo "APK_URL=$APK_URL" >> $GITHUB_ENV
 
       - name: Download APK
-        run: curl -fL $APK_URL -o RepBook.apk
+        run: |
+          curl -fL "$APK_URL" -o RepBook-${{ github.ref_name }}.apk
 
       - name: Create GitHub Release & Upload APK
         uses: softprops/action-gh-release@v2
         with:
           name: Release ${{ github.ref_name }}
-          files: RepBook.apk
+          files: RepBook-${{ github.ref_name }}.apk
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
