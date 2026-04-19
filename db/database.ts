@@ -190,6 +190,33 @@ export async function getWorkoutHistory() {
   return history;
 }
 
+export async function getLastPerformance(exerciseName: string) {
+  const database = getDb();
+  const rows = await database.getAllAsync<any>(
+    `SELECT s.reps, s.weight, s.unit, w.date 
+     FROM sets s
+     JOIN exercises e ON s.exercise_id = e.id
+     JOIN workouts w ON e.workout_id = w.id
+     WHERE e.name = ?
+     AND w.date < ?
+     ORDER BY w.date DESC, s.set_number ASC
+     LIMIT 10`,
+    String(exerciseName),
+    new Date().toISOString()
+  );
+
+  if (rows.length === 0) return null;
+
+  // Group by date to find the most recent session
+  const lastDate = rows[0].date;
+  const lastSets = rows.filter(r => r.date === lastDate);
+
+  return {
+    date: lastDate,
+    sets: lastSets.map(s => ({ reps: s.reps, weight: s.weight, unit: s.unit })),
+  };
+}
+
 // ─── Templates ──────────────────────────────────────────────
 export async function getTemplates(): Promise<(Template & { exercises: TemplateExercise[] })[]> {
   const database = getDb();
@@ -284,6 +311,15 @@ export async function saveSetting(key: string, value: string) {
     String(key),
     String(value)
   );
+}
+
+export async function getSetting(key: string) {
+  const database = getDb();
+  const row = await database.getFirstAsync<{ value: string }>(
+    `SELECT value FROM settings WHERE key = ?`,
+    String(key)
+  );
+  return row ? row.value : null;
 }
 
 const uid = () => Math.random().toString(36).substring(2, 11);

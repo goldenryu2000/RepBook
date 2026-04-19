@@ -7,7 +7,14 @@ interface WorkoutState {
   date: Date;
   editingWorkoutId: string | null;
   exercises: ActiveExercise[];
+  loggingMode: 'list' | 'focus';
+  focusState: {
+    exerciseIndex: number;
+    setIndex: number;
+    step: 'weight' | 'active' | 'reps' | 'rest' | 'complete';
+  };
   setDate: (date: Date) => void;
+  setLoggingMode: (mode: 'list' | 'focus') => void;
   startEmptyWorkout: () => void;
   addExercise: () => void;
   updateExerciseName: (id: string, name: string) => void;
@@ -17,6 +24,8 @@ interface WorkoutState {
   removeSet: (exerciseId: string, setId: string) => void;
   resetWorkout: () => void;
   loadWorkoutForEdit: (workout: any) => void;
+  nextStep: () => void;
+  prevStep: () => void;
 }
 
 const uid = () => Math.random().toString(36).substring(2, 9);
@@ -38,10 +47,35 @@ export const useWorkoutStore = create<WorkoutState>(set => ({
   date: new Date(),
   editingWorkoutId: null,
   exercises: [],
+  loggingMode: 'list',
+  focusState: {
+    exerciseIndex: 0,
+    setIndex: 0,
+    step: 'weight',
+  },
 
   setDate: date => set({ date }),
 
-  startEmptyWorkout: () => set({ isActive: true, activeTemplateId: null, exercises: [] }),
+  setLoggingMode: loggingMode => set({ loggingMode }),
+
+  startEmptyWorkout: () =>
+    set(state => {
+      const unit = getDefaultUnit();
+      const exerciseId = uid();
+      return {
+        isActive: true,
+        activeTemplateId: null,
+        loggingMode: 'focus',
+        focusState: { exerciseIndex: 0, setIndex: 0, step: 'weight' },
+        exercises: [
+          {
+            id: exerciseId,
+            name: '',
+            sets: [{ id: uid(), reps: '', weight: '', unit }],
+          },
+        ],
+      };
+    }),
 
   addExercise: () =>
     set(state => {
@@ -105,6 +139,8 @@ export const useWorkoutStore = create<WorkoutState>(set => ({
       exercises: [],
       date: new Date(),
       editingWorkoutId: null,
+      loggingMode: 'list',
+      focusState: { exerciseIndex: 0, setIndex: 0, step: 'weight' },
     }),
 
   loadWorkoutForEdit: workout =>
@@ -123,5 +159,54 @@ export const useWorkoutStore = create<WorkoutState>(set => ({
           unit: s.unit || 'lbs',
         })),
       })),
+    }),
+
+  nextStep: () =>
+    set(state => {
+      const { exerciseIndex, setIndex, step } = state.focusState;
+      const currentExercise = state.exercises[exerciseIndex];
+      if (!currentExercise) return state;
+
+      if (step === 'weight') return { focusState: { ...state.focusState, step: 'active' } };
+      if (step === 'active') return { focusState: { ...state.focusState, step: 'reps' } };
+      if (step === 'reps') return { focusState: { ...state.focusState, step: 'rest' } };
+
+      // step === 'rest' -> move to next set or next exercise
+      if (setIndex < currentExercise.sets.length - 1) {
+        return { focusState: { ...state.focusState, setIndex: setIndex + 1, step: 'weight' } };
+      }
+
+      if (exerciseIndex < state.exercises.length - 1) {
+        return { focusState: { exerciseIndex: exerciseIndex + 1, setIndex: 0, step: 'weight' } };
+      }
+
+      // End of workout
+      return { focusState: { ...state.focusState, step: 'complete' } };
+    }),
+
+  prevStep: () =>
+    set(state => {
+      const { exerciseIndex, setIndex, step } = state.focusState;
+      if (step === 'rest') return { focusState: { ...state.focusState, step: 'reps' } };
+      if (step === 'reps') return { focusState: { ...state.focusState, step: 'active' } };
+      if (step === 'active') return { focusState: { ...state.focusState, step: 'weight' } };
+
+      // step === 'weight' -> move to prev set or prev exercise
+      if (setIndex > 0) {
+        return { focusState: { ...state.focusState, setIndex: setIndex - 1, step: 'rest' } };
+      }
+
+      if (exerciseIndex > 0) {
+        const prevExercise = state.exercises[exerciseIndex - 1];
+        return {
+          focusState: {
+            exerciseIndex: exerciseIndex - 1,
+            setIndex: prevExercise.sets.length - 1,
+            step: 'rest',
+          },
+        };
+      }
+
+      return state;
     }),
 }));

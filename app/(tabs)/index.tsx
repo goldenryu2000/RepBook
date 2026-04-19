@@ -4,6 +4,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { YStack, XStack, Text, Button, H1, Input } from 'tamagui';
 import { Feather } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 
 import { useWorkoutStore } from '../../store/workoutStore';
 import { useUserStore } from '../../store/userStore';
@@ -12,6 +13,7 @@ import { saveWorkoutSession, getTemplates, saveTemplate } from '../../db/databas
 import { useFocusEffect } from 'expo-router';
 import { Template, TemplateExercise, ActiveExercise } from '../../types';
 import { useAlertStore } from '../../store/alertStore';
+import { FocusWorkoutView } from '../../components/FocusWorkoutView';
 
 type FullTemplate = Template & { exercises: TemplateExercise[] };
 
@@ -28,8 +30,11 @@ export default function LogScreen() {
     resetWorkout,
     editingWorkoutId,
     startEmptyWorkout,
+    loggingMode,
+    setLoggingMode,
+    focusState,
   } = useWorkoutStore();
-  const { defaultUnit, setDefaultUnit } = useUserStore();
+  const { defaultUnit, setDefaultUnit, defaultRestTime, setRestTime } = useUserStore();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [suggestedTemplate, setSuggestedTemplate] = useState<FullTemplate | null>(null);
@@ -99,6 +104,7 @@ export default function LogScreen() {
       await saveWorkoutSession(valid, date.toISOString(), editingWorkoutId);
       const wasAdhoc = !activeTemplateId && !editingWorkoutId;
       resetWorkout();
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
       if (wasAdhoc) {
         useAlertStore
@@ -132,6 +138,7 @@ export default function LogScreen() {
 
   const handleStartTemplate = (template: FullTemplate) => {
     const uid = () => Math.random().toString(36).substring(2, 9);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     useWorkoutStore.setState({
       isActive: true,
       activeTemplateId: template.id,
@@ -147,7 +154,14 @@ export default function LogScreen() {
       })),
       date: new Date(),
       editingWorkoutId: null,
+      loggingMode: 'focus',
+      focusState: { exerciseIndex: 0, setIndex: 0, step: 'weight' },
     });
+  };
+
+  const handleStartEmptyWorkout = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    startEmptyWorkout();
   };
 
   return (
@@ -175,25 +189,40 @@ export default function LogScreen() {
         </YStack>
         {/* Header Action button */}
         {isActive ? (
-          <Button
-            size="$3"
-            bg="$red4"
-            borderColor="$red6"
-            borderWidth={1}
-            color="$red11"
-            fontWeight="700"
-            onPress={() => {
-              useAlertStore
-                .getState()
-                .showAlert('Cancel Workout?', 'Are you sure you want to discard this workout?', [
-                  { text: 'Keep Logging', style: 'cancel' },
-                  { text: 'Discard', style: 'destructive', onPress: resetWorkout },
-                ]);
-            }}
-            pressStyle={{ opacity: 0.8 }}
-          >
-            Cancel
-          </Button>
+          <XStack ai="center" gap="$2">
+            {loggingMode === 'list' && (
+              <Button
+                size="$3"
+                bg="$green9"
+                color="#09090b"
+                fontWeight="800"
+                onPress={handleFinish}
+                pressStyle={{ opacity: 0.8 }}
+                disabled={isSaving}
+              >
+                {isSaving ? 'Saving...' : 'Finish'}
+              </Button>
+            )}
+            <Button
+              size="$3"
+              bg="$red4"
+              borderColor="$red6"
+              borderWidth={1}
+              color="$red11"
+              fontWeight="700"
+              onPress={() => {
+                useAlertStore
+                  .getState()
+                  .showAlert('Cancel Workout?', 'Are you sure you want to discard this workout?', [
+                    { text: 'Keep Logging', style: 'cancel' },
+                    { text: 'Discard', style: 'destructive', onPress: resetWorkout },
+                  ]);
+              }}
+              pressStyle={{ opacity: 0.8 }}
+            >
+              Cancel
+            </Button>
+          </XStack>
         ) : (
           <Button
             size="$3"
@@ -221,12 +250,12 @@ export default function LogScreen() {
       )}
 
       {/* Main Area */}
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
-        keyboardShouldPersistTaps="handled"
-      >
-        {!isActive ? (
+      {!isActive ? (
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
+          keyboardShouldPersistTaps="handled"
+        >
           <YStack py="$2" gap="$4">
             {suggestedTemplate ? (
               <YStack bg="$green2" borderColor="$green5" borderWidth={1} br="$6" p="$5">
@@ -297,15 +326,38 @@ export default function LogScreen() {
               borderWidth={1}
               color="$color12"
               fontWeight="800"
-              onPress={startEmptyWorkout}
+              onPress={handleStartEmptyWorkout}
               icon={<Feather name="plus" size={18} color="#fafafa" />}
               pressStyle={{ opacity: 0.8 }}
             >
               Start Empty Workout
             </Button>
           </YStack>
-        ) : (
+        </ScrollView>
+      ) : loggingMode === 'focus' ? (
+        <FocusWorkoutView />
+      ) : (
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
+          keyboardShouldPersistTaps="handled"
+        >
           <YStack pb="$8">
+            <XStack jc="center" mb="$4">
+              <Button
+                size="$3"
+                bg="$blue4"
+                borderColor="$blue6"
+                borderWidth={1}
+                color="$blue11"
+                fontWeight="700"
+                icon={<Feather name="maximize-2" size={14} color="#60a5fa" />}
+                onPress={() => setLoggingMode('focus')}
+              >
+                Switch to Focus Mode
+              </Button>
+            </XStack>
+
             {exercises.map(ex => (
               <ExerciseCard key={ex.id} exercise={ex} />
             ))}
@@ -325,11 +377,11 @@ export default function LogScreen() {
               Add Exercise
             </Button>
           </YStack>
-        )}
-      </ScrollView>
+        </ScrollView>
+      )}
 
-      {/* Finish bar */}
-      {isActive && (
+      {/* Finish bar - Only show in List Mode */}
+      {isActive && loggingMode === 'list' && (
         <YStack
           position="absolute"
           bottom={0}
@@ -407,24 +459,66 @@ export default function LogScreen() {
                   flex={1}
                   size="$4"
                   bg={defaultUnit === 'lbs' ? '$green9' : '$color3'}
-                  color={defaultUnit === 'lbs' ? '#09090b' : '$color9'}
-                  fontWeight="800"
-                  onPress={() => setDefaultUnit('lbs')}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setDefaultUnit('lbs');
+                  }}
                   pressStyle={{ opacity: 0.8 }}
                 >
-                  lbs
+                  <Text color={defaultUnit === 'lbs' ? '#09090b' : '$color9'} fontWeight="800">
+                    lbs
+                  </Text>
                 </Button>
                 <Button
                   flex={1}
                   size="$4"
                   bg={defaultUnit === 'kgs' ? '$green9' : '$color3'}
-                  color={defaultUnit === 'kgs' ? '#09090b' : '$color9'}
-                  fontWeight="800"
-                  onPress={() => setDefaultUnit('kgs')}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setDefaultUnit('kgs');
+                  }}
                   pressStyle={{ opacity: 0.8 }}
                 >
-                  kgs
+                  <Text color={defaultUnit === 'kgs' ? '#09090b' : '$color9'} fontWeight="800">
+                    kgs
+                  </Text>
                 </Button>
+              </XStack>
+            </YStack>
+            {/* Default Rest Timer Toggle */}
+            <YStack bg="$color2" borderColor="$color4" borderWidth={1} br="$5" p="$4">
+              <Text
+                color="$color9"
+                fontSize="$2"
+                fontWeight="600"
+                textTransform="uppercase"
+                letterSpacing={1}
+                mb="$3"
+              >
+                Default Rest Timer
+              </Text>
+              <Text color="$color8" fontSize="$3" mb="$4">
+                The countdown between sets in Focus Mode.
+              </Text>
+              <XStack gap="$2" flexWrap="wrap">
+                {[60, 90, 120, 180].map(time => (
+                  <Button
+                    key={time}
+                    flex={1}
+                    size="$3"
+                    bg={defaultRestTime === time ? '$green9' : '$color3'}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setRestTime(time);
+                    }}
+                    pressStyle={{ opacity: 0.8 }}
+                    minWidth={70}
+                  >
+                    <Text color={defaultRestTime === time ? '#09090b' : '$color9'} fontWeight="800">
+                      {time}s
+                    </Text>
+                  </Button>
+                ))}
               </XStack>
             </YStack>
           </YStack>

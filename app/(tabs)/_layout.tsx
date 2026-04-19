@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 
 export default function TabLayout() {
   return (
@@ -15,6 +16,11 @@ export default function TabLayout() {
         tabBarInactiveTintColor: '#52525b', // zinc-600
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
       }}
+      screenListeners={{
+        state: () => {
+          Haptics.selectionAsync();
+        },
+      }}
     >
       <Tabs.Screen
         name="index"
@@ -24,17 +30,17 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="history"
-        options={{
-          title: 'History',
-          tabBarIcon: ({ color }) => <Feather name="calendar" size={22} color={color} />,
-        }}
-      />
-      <Tabs.Screen
         name="templates"
         options={{
           title: 'Templates',
           tabBarIcon: ({ color }) => <Feather name="bookmark" size={22} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="history"
+        options={{
+          title: 'History',
+          tabBarIcon: ({ color }) => <Feather name="calendar" size={22} color={color} />,
         }}
       />
       <Tabs.Screen

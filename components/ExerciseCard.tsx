@@ -1,10 +1,11 @@
-import React from 'react';
-import { YStack, XStack, Button } from 'tamagui';
 import { Feather } from '@expo/vector-icons';
-import { ActiveExercise, ActiveSet } from '../types';
-import { SetRow } from './SetRow';
+import * as Haptics from 'expo-haptics';
+import React from 'react';
+import { Button, XStack, YStack } from 'tamagui';
 import { useWorkoutStore } from '../store/workoutStore';
+import { ActiveExercise, ActiveSet } from '../types';
 import { ExerciseAutocomplete } from './ExerciseAutocomplete';
+import { SetRow } from './SetRow';
 
 interface ExerciseCardProps {
   exercise: ActiveExercise;
@@ -25,7 +26,10 @@ export function ExerciseCard({ exercise }: ExerciseCardProps) {
           size="$2"
           circular
           bg="$red2"
-          onPress={() => removeExercise(exercise.id)}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            removeExercise(exercise.id);
+          }}
           pressStyle={{ opacity: 0.7 }}
           icon={<Feather name="x" size={14} color="#ef4444" />}
         />
@@ -54,7 +58,10 @@ export function ExerciseCard({ exercise }: ExerciseCardProps) {
         borderWidth={1}
         color="$green10"
         fontWeight="700"
-        onPress={() => addSet(exercise.id)}
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          addSet(exercise.id);
+        }}
         pressStyle={{ opacity: 0.8 }}
       >
         + Add Set

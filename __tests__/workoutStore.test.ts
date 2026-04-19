@@ -28,7 +28,7 @@ describe('startEmptyWorkout', () => {
 
     const state = useWorkoutStore.getState();
     expect(state.isActive).toBe(true);
-    expect(state.exercises).toHaveLength(0);
+    expect(state.exercises).toHaveLength(1); // Now defaults to 1 exercise
     expect(state.activeTemplateId).toBeNull();
   });
 });
@@ -174,5 +174,96 @@ describe('loadWorkoutForEdit', () => {
     expect(state.exercises[0].sets[0].reps).toBe('5');
     expect(state.exercises[0].sets[0].weight).toBe('100');
     expect(state.exercises[0].sets[0].unit).toBe('kgs');
+  });
+});
+
+// ─── Focus Mode Navigation ────────────────────────────────────────────────────
+
+describe('Focus Mode State Machine', () => {
+  it('initializes with default focus state', () => {
+    const { focusState, loggingMode } = useWorkoutStore.getState();
+    expect(loggingMode).toBe('list');
+    expect(focusState).toEqual({
+      exerciseIndex: 0,
+      setIndex: 0,
+      step: 'weight',
+    });
+  });
+
+  it('cycles through steps for a single set', () => {
+    act(() => {
+      useWorkoutStore.getState().startEmptyWorkout();
+    });
+
+    expect(useWorkoutStore.getState().exercises).toHaveLength(1);
+    expect(useWorkoutStore.getState().focusState.step).toBe('weight');
+
+    // weight -> active
+    act(() => useWorkoutStore.getState().nextStep());
+    expect(useWorkoutStore.getState().focusState.step).toBe('active');
+
+    // active -> reps
+    act(() => useWorkoutStore.getState().nextStep());
+    expect(useWorkoutStore.getState().focusState.step).toBe('reps');
+
+    // reps -> rest
+    act(() => useWorkoutStore.getState().nextStep());
+    expect(useWorkoutStore.getState().focusState.step).toBe('rest');
+  });
+
+  it('moves to next set after rest', () => {
+    act(() => {
+      useWorkoutStore.getState().startEmptyWorkout();
+    });
+
+    // Add another set manually
+    const exId = useWorkoutStore.getState().exercises[0].id;
+    act(() => {
+      useWorkoutStore.getState().addSet(exId);
+    });
+
+    expect(useWorkoutStore.getState().exercises[0].sets).toHaveLength(2);
+
+    // Move to rest of first set
+    act(() => {
+      useWorkoutStore.getState().nextStep(); // weight -> active
+      useWorkoutStore.getState().nextStep(); // active -> reps
+      useWorkoutStore.getState().nextStep(); // reps -> rest
+    });
+
+    expect(useWorkoutStore.getState().focusState.setIndex).toBe(0);
+    expect(useWorkoutStore.getState().focusState.step).toBe('rest');
+
+    // rest -> next set weight
+    act(() => useWorkoutStore.getState().nextStep());
+    expect(useWorkoutStore.getState().focusState.setIndex).toBe(1);
+    expect(useWorkoutStore.getState().focusState.step).toBe('weight');
+  });
+
+  it('transitions to complete at the end of the workout', () => {
+    act(() => {
+      useWorkoutStore.getState().startEmptyWorkout(); // 1 ex, 1 set
+    });
+
+    act(() => {
+      useWorkoutStore.getState().nextStep(); // to active
+      useWorkoutStore.getState().nextStep(); // to reps
+      useWorkoutStore.getState().nextStep(); // to rest
+      useWorkoutStore.getState().nextStep(); // to complete
+    });
+
+    expect(useWorkoutStore.getState().focusState.step).toBe('complete');
+  });
+
+  it('navigates backwards correctly with prevStep', () => {
+    act(() => {
+      useWorkoutStore.getState().startEmptyWorkout();
+    });
+
+    act(() => useWorkoutStore.getState().nextStep()); // weight -> active
+    expect(useWorkoutStore.getState().focusState.step).toBe('active');
+
+    act(() => useWorkoutStore.getState().prevStep()); // active -> weight
+    expect(useWorkoutStore.getState().focusState.step).toBe('weight');
   });
 });

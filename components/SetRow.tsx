@@ -2,6 +2,7 @@ import React from 'react';
 import { TextInput } from 'react-native';
 import { XStack, YStack, Text, Button } from 'tamagui';
 import { Feather } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { ActiveSet } from '../types';
 
 interface SetRowProps {
@@ -72,7 +73,10 @@ export function SetRow({ setNumber, set, onUpdate, onRemove }: SetRowProps) {
           fontWeight="800"
           fontSize={10}
           px="$2"
-          onPress={() => onUpdate('unit', set.unit === 'lbs' ? 'kgs' : 'lbs')}
+          onPress={() => {
+            Haptics.selectionAsync();
+            onUpdate('unit', set.unit === 'lbs' ? 'kgs' : 'lbs');
+          }}
           pressStyle={{ opacity: 0.7 }}
         >
           {set.unit || 'lbs'}
@@ -84,7 +88,10 @@ export function SetRow({ setNumber, set, onUpdate, onRemove }: SetRowProps) {
         size="$2"
         circular
         bg="$red2"
-        onPress={onRemove}
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          onRemove();
+        }}
         pressStyle={{ opacity: 0.7 }}
         icon={<Feather name="trash-2" size={14} color="#ef4444" />}
       />
