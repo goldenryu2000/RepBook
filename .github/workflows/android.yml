@@ -20,18 +20,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Setup EAS
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
 
       - name: Trigger EAS Build & Wait
-        run: eas build -p android --profile preview --non-interactive --wait --json > build.json
+        run: eas build -p android --profile preview --non-interactive --wait --json >
+          build.json
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
