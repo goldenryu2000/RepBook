@@ -8,6 +8,11 @@
     <a href="https://tamagui.dev/" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/Tamagui-151515?style=for-the-badge&logo=react&logoColor=FFD166" alt="Tamagui" /></a>
     <a href="https://www.sqlite.org/" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite" /></a>
   </p>
+  <p>
+    <a href="https://github.com/goldenryu2000/RepBook/releases/latest" target="_blank" rel="noopener noreferrer">
+      <img src="https://img.shields.io/badge/Download_APK-green?style=for-the-badge&logo=android&logoColor=white" alt="Download APK" />
+    </a>
+  </p>
 </div>
 
 <br />

@@ -5,6 +5,9 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,7 +19,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 18
 
       - name: Install dependencies
         run: npm ci
@@ -30,18 +33,27 @@ jobs:
       - name: Trigger EAS Build & Wait
         run: eas build -p android --profile preview --non-interactive --wait --json > build.json
 
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
       - name: Extract APK URL
         run: |
-          # The JSON is an array of build objects. We get the first one's buildUrl
           APK_URL=$(jq -r '.[0].artifacts.buildUrl' build.json)
+          if [ -z "$APK_URL" ] || [ "$APK_URL" = "null" ]; then
+            echo "Failed to extract APK URL. build.json output:"
+            cat build.json
+            exit 1
+          fi
           echo "APK_URL=$APK_URL" >> $GITHUB_ENV
 
       - name: Download APK
-        run: curl -L $APK_URL -o RepBook.apk
+        run: curl -fL $APK_URL -o RepBook.apk
 
       - name: Create GitHub Release & Upload APK
         uses: softprops/action-gh-release@v2
         with:
+          name: Release ${{ github.ref_name }}
           files: RepBook.apk
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
