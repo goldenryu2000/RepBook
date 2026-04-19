@@ -30,6 +30,14 @@
 - **Full History:** Scroll through your entire workout history with detailed exercise and set breakdowns.
 - **Dark Mode:** A sleek, high-contrast dark theme powered by <a href="https://tamagui.dev" target="_blank" rel="noopener noreferrer">Tamagui</a>.
 
+## 🗺️ Roadmap (Upcoming Features)
+
+- Custom App Logo & Branding
+- Data Export & Import (JSON/CSV backups for your SQLite data)
+- Rest Timer for active workouts
+- Support for Supersets & Dropsets
+- Muscle Group Heatmaps
+
 ## 🛠️ Tech Stack
 
 RepBook is built on the modern React Native ecosystem:
